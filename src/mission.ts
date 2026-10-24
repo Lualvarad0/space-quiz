@@ -12,11 +12,16 @@ export interface MissionState {
   log: string[]
 }
 
-interface EventChoice {
+export interface EventChoice {
   id: string
   title: string
   description: string
   effects: Partial<ResourceLevels>
+  progress: number
+}
+
+export interface EventChoiceImpact {
+  resources: Partial<ResourceLevels>
   progress: number
 }
 
@@ -118,6 +123,31 @@ export function getEventForDay(day: number): MissionEvent | undefined {
   return MISSION_EVENTS.find((event) => event.day === day)
 }
 
+function applyResourceEffects(
+  resources: ResourceLevels,
+  effects: Partial<ResourceLevels>,
+): ResourceLevels {
+  const updatedResources = { ...resources }
+  for (const [resource, amount] of Object.entries(effects) as [ResourceName, number][]) {
+    updatedResources[resource] = Math.max(0, Math.min(100, resources[resource] + amount))
+  }
+  return updatedResources
+}
+
+export function getEventChoiceImpact(
+  state: MissionState,
+  choice: EventChoice,
+): EventChoiceImpact {
+  const updatedResources = applyResourceEffects(state.resources, choice.effects)
+  const resources: Partial<ResourceLevels> = {}
+
+  for (const resource of Object.keys(choice.effects) as ResourceName[]) {
+    resources[resource] = updatedResources[resource] - state.resources[resource]
+  }
+
+  return { resources, progress: choice.progress }
+}
+
 export function resolveEventChoice(state: MissionState, choiceId: string): MissionState {
   const event = getEventForDay(state.day)
   const choice = event?.choices.find((item) => item.id === choiceId)
@@ -126,13 +156,7 @@ export function resolveEventChoice(state: MissionState, choiceId: string): Missi
     throw new Error('La decisión ya no está disponible para esta jornada.')
   }
 
-  const resources = { ...state.resources }
-  for (const [resource, amount] of Object.entries(choice.effects) as [
-    ResourceName,
-    number,
-  ][]) {
-    resources[resource] = Math.max(0, Math.min(100, resources[resource] + amount))
-  }
+  const resources = applyResourceEffects(state.resources, choice.effects)
 
   return {
     ...state,

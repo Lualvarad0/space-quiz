@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   advanceDay,
   createMission,
+  getEventChoiceImpact,
   getEventForDay,
   MISSION_DAYS,
   resolveEventChoice,
@@ -144,13 +145,33 @@ function App() {
                   <p>{event.description}</p>
                 </div>
                 <div className="choice-list">
-                  {event.choices.map((choice, index) => (
-                    <button className="choice-card" key={choice.id} type="button" onClick={() => chooseEvent(choice.id)}>
-                      <span className="choice-number">0{index + 1}</span>
-                      <span className="choice-copy"><strong>{choice.title}</strong><small>{choice.description}</small></span>
-                      <span className="choice-arrow" aria-hidden="true">↗</span>
-                    </button>
-                  ))}
+                  {event.choices.map((choice, index) => {
+                    const impact = getEventChoiceImpact(mission, choice)
+                    const resourceImpacts = resourceDetails.flatMap((resource) => {
+                      const change = impact.resources[resource.name]
+                      if (change === undefined) return []
+                      return [
+                        change === 0
+                          ? `${resource.label}: sin cambio`
+                          : `${resource.label} ${change > 0 ? '+' : '−'}${Math.abs(change)}${resource.unit}`,
+                      ]
+                    })
+                    const impactText = [
+                      ...resourceImpacts,
+                      `Progreso +${impact.progress} ${impact.progress === 1 ? 'hito' : 'hitos'}`,
+                    ].join(' · ')
+                    return (
+                      <button className="choice-card" key={choice.id} type="button" onClick={() => chooseEvent(choice.id)}>
+                        <span className="choice-number">0{index + 1}</span>
+                        <span className="choice-copy">
+                          <strong>{choice.title}</strong>
+                          <small>{choice.description}</small>
+                          <span className="choice-impact">{impactText}</span>
+                        </span>
+                        <span className="choice-arrow" aria-hidden="true">↗</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             ) : active ? (
