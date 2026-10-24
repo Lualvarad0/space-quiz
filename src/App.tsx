@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   advanceDay,
   createMission,
@@ -8,6 +8,7 @@ import {
   type MissionState,
   type ResourceName,
 } from './mission'
+import { MISSION_STORAGE_KEY, parseSavedMission } from './missionStorage'
 import './App.css'
 
 const resourceDetails: {
@@ -22,8 +23,33 @@ const resourceDetails: {
   { name: 'casco', label: 'Integridad del casco', unit: '%', icon: '⬡' },
 ]
 
+function restoreMission(): MissionState {
+  try {
+    const saved = window.localStorage.getItem(MISSION_STORAGE_KEY)
+    const mission = parseSavedMission(saved)
+
+    if (saved !== null && mission === null) {
+      console.warn('La partida guardada no es válida. Se iniciará una misión nueva.')
+    }
+
+    return mission ?? createMission()
+  } catch (error) {
+    console.error('No se pudo leer la misión guardada.', error)
+    return createMission()
+  }
+}
+
 function App() {
-  const [mission, setMission] = useState<MissionState>(createMission)
+  const [mission, setMission] = useState<MissionState>(restoreMission)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(MISSION_STORAGE_KEY, JSON.stringify(mission))
+    } catch (error) {
+      console.error('No se pudo guardar la misión actual.', error)
+    }
+  }, [mission])
+
   const event = getEventForDay(mission.day)
   const eventResolved = event ? mission.resolvedEvents.includes(event.day) : false
   const active = mission.status === 'active'

@@ -23,6 +23,12 @@ npm run build
 
 ## Cómo jugar
 
-Avanza las jornadas para completar la trayectoria, administra combustible, energía, suministros e integridad del casco, y resuelve los eventos de los días 2, 4 y 6. La misión concluye al terminar el día 7. El progreso se mantiene solo mientras la página siga abierta; puedes iniciar otra expedición al finalizar.
+Avanza las jornadas para completar la trayectoria, administra combustible, energía, suministros e integridad del casco, y resuelve los eventos de los días 2, 4 y 6. La misión concluye al terminar el día 7. Tu partida se guarda automáticamente en este navegador y se restaura al volver; puedes iniciar otra expedición al finalizar.
 
 Las reglas del simulador están en `src/mission.ts` y la interfaz en español en `src/App.tsx`.
+
+## Pruebas
+
+```sh
+npm test
+```
